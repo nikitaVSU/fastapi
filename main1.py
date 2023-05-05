@@ -51,36 +51,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     access_token = create_access_token(data={"sub": user.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Эндпоинт для загрузки XML-файла и сохранения его в базе данных
-@app.post("/xml/")
-async def create_xml(xml_file: UploadFile = File(...), db: Session = Depends(get_db), token: Optional[str] = Depends(oauth2_scheme)):
-    if not is_authorized(token):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    # Чтение XML-файла и сохранение его в базе данных
-    xml_data = xml_file.file.read()
-    xml_string = xml_data.decode('utf-8')
-    xml = fromstring(xml_string)
-    db_xml = models.XML(content=xml_string)
-    db.add(db_xml)
-    db.commit()
-    db.refresh(db_xml)
-
-    return {"message": "XML file saved"}
-
-# Эндпоинт для получения всех сохраненных XML-файлов в формате JSON
-@app.get("/xml/")
-async def read_all_xml(db: Session = Depends(get_db), token: Optional[str] = Depends(oauth2_scheme)):
-    if not is_authorized(token):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    # Получение всех сохраненных XML-файлов из базы данных и преобразование их в JSON
-    db_xmls = db.query(models.XML).all()
-    xmls = [fromstring(xml.content) for xml in db_xmls]
-    jsons = [dumps(xml.attrib) for xml in xmls]
-
-    return jsons
-
 #Текстовое сообщение
 @app.post("/messages/")
 async def create_message(message: schemas.MessageCreate, db: Session = Depends(get_db), token: Optional[str] = Depends(oauth2_scheme)):
@@ -91,3 +61,7 @@ async def create_message(message: schemas.MessageCreate, db: Session = Depends(g
     db.commit()
     db.refresh(db_message)
     return db_message
+
+if __name__ == "__main1__":
+    import uvicorn
+    uvicorn.run(app, host="127.0.0.1", port=8080)
